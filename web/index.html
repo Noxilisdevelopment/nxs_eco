@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NXS Économie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="app-wrap" style="display: none;">
+        <div class="panel">
+            <!-- TOP HEADER -->
+            <div class="panel-header">
+                <div class="header-left">
+                    <div class="app-tag">ADMINISTRATION</div>
+                    <div class="title-row">
+                        <h2>Gestion Économie</h2>
+                        <span class="server-badge">NXS RP</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button id="btn-refresh" class="btn btn-ghost" title="Actualiser">
+                        <svg class="icon-refresh" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Actualiser</span>
+                    </button>
+
+                    <button id="btn-export" class="btn btn-ghost" title="Exporter les données au format CSV">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Export CSV</span>
+                    </button>
+
+                    <button id="btn-close" class="btn btn-close" title="Fermer (Échap)">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- COMPACT OVERVIEW BAR -->
+            <div class="overview-bar">
+                <div class="ov-item">
+                    <span class="ov-label">Masse Totale</span>
+                    <span class="ov-value" id="stat-grand-total">0 $</span>
+                </div>
+                <div class="ov-sep"></div>
+                <div class="ov-item">
+                    <span class="ov-label">Banque</span>
+                    <span class="ov-value bank-color" id="stat-total-bank">0 $</span>
+                </div>
+                <div class="ov-sep"></div>
+                <div class="ov-item">
+                    <span class="ov-label">Liquide</span>
+                    <span class="ov-value cash-color" id="stat-total-cash">0 $</span>
+                </div>
+                <div class="ov-sep"></div>
+                <div class="ov-item">
+                    <span class="ov-label">Entreprises</span>
+                    <span class="ov-value soc-color" id="stat-total-societies">0 $</span>
+                </div>
+                <div class="ov-sep"></div>
+                <div class="ov-item">
+                    <span class="ov-label">Plus Grosse Fortune</span>
+                    <div class="ov-flex">
+                        <span class="ov-highlight" id="stat-richest-name">---</span>
+                        <span class="ov-subval" id="stat-richest-amount">0 $</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABS & SEARCH BAR -->
+            <div class="toolbar">
+                <div class="tabs-group">
+                    <button class="tab active" data-tab="tab-players">
+                        <span>Joueurs</span>
+                        <span class="tab-badge" id="count-all-players">0</span>
+                    </button>
+                    <button class="tab" data-tab="tab-societies">
+                        <span>Entreprises</span>
+                        <span class="tab-badge" id="count-all-societies">0</span>
+                    </button>
+                    <button class="tab" data-tab="tab-leaderboard">
+                        <span>Classement</span>
+                    </button>
+                </div>
+
+                <div class="tools-group" id="players-tools">
+                    <div class="search-input-wrap">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="player-search" placeholder="Rechercher nom, ID, licence...">
+                        <button id="search-clear" class="btn-clear" style="display: none;">&times;</button>
+                    </div>
+
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter="all">Tous</button>
+                        <button class="filter-btn" data-filter="online">En ligne (<span id="filter-online-count">0</span>)</button>
+                        <button class="filter-btn" data-filter="offline">Hors ligne (<span id="filter-offline-count">0</span>)</button>
+                    </div>
+
+                    <select id="sort-select" class="sort-select">
+                        <option value="total_desc">Fortune ↓</option>
+                        <option value="total_asc">Fortune ↑</option>
+                        <option value="cash_desc">Liquide ↓</option>
+                        <option value="bank_desc">Banque ↓</option>
+                        <option value="name_asc">Nom A-Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TAB 1: PLAYERS -->
+            <div class="tab-panel active" id="tab-players">
+                <div class="table-container">
+                    <table class="grid-table">
+                        <thead>
+                            <tr>
+                                <th>Citoyen</th>
+                                <th>Statut</th>
+                                <th>Emploi</th>
+                                <th class="text-right">Liquide</th>
+                                <th class="text-right">Banque</th>
+                                <th class="text-right">Sale</th>
+                                <th class="text-right">Total</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="players-table-body">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                    <div id="no-players-msg" class="empty-notice" style="display: none;">
+                        Aucun résultat pour cette recherche.
+                    </div>
+                </div>
+
+                <div class="footer-bar">
+                    <span class="footer-text" id="pagination-info">0 joueur(s)</span>
+                    <div class="footer-pager">
+                        <button id="btn-page-prev" class="pager-btn" disabled>&larr;</button>
+                        <span id="page-current" class="pager-label">Page 1 / 1</span>
+                        <button id="btn-page-next" class="pager-btn" disabled>&rarr;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: SOCIETIES -->
+            <div class="tab-panel" id="tab-societies">
+                <div class="table-container">
+                    <table class="grid-table">
+                        <thead>
+                            <tr>
+                                <th>Nom Entreprise</th>
+                                <th>Identifiant Caisse</th>
+                                <th class="text-right">Solde Actuel</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="societies-table-body">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                    <div id="no-societies-msg" class="empty-notice" style="display: none;">
+                        Aucune caisse d'entreprise trouvée.
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: LEADERBOARD -->
+            <div class="tab-panel" id="tab-leaderboard">
+                <div class="leaderboard-list" id="leaderboard-container">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+
+        <!-- PLAYER MODAL -->
+        <div id="player-modal" class="modal-layer" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-top">
+                    <div>
+                        <h4 id="modal-player-name">Joueur</h4>
+                        <span id="modal-player-identifier" class="modal-id">license:...</span>
+                    </div>
+                    <button class="modal-x" id="btn-close-modal">&times;</button>
+                </div>
+
+                <!-- Balance overview -->
+                <div class="modal-balances">
+                    <div class="bal-box">
+                        <span class="bal-lbl">Liquide</span>
+                        <span class="bal-num cash-color" id="m-val-cash">0 $</span>
+                    </div>
+                    <div class="bal-box">
+                        <span class="bal-lbl">Banque</span>
+                        <span class="bal-num bank-color" id="m-val-bank">0 $</span>
+                    </div>
+                    <div class="bal-box">
+                        <span class="bal-lbl">Argent Sale</span>
+                        <span class="bal-num red-color" id="m-val-black">0 $</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>Compte concerné</label>
+                    <div class="segmented">
+                        <button type="button" class="seg-btn active" data-account="money">Liquide</button>
+                        <button type="button" class="seg-btn" data-account="bank">Banque</button>
+                        <button type="button" class="seg-btn" data-account="black_money">Argent Sale</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>Montants rapides</label>
+                    <div class="chip-row">
+                        <button type="button" class="chip-btn preset-btn" data-amount="10000">+10k</button>
+                        <button type="button" class="chip-btn preset-btn" data-amount="50000">+50k</button>
+                        <button type="button" class="chip-btn preset-btn" data-amount="100000">+100k</button>
+                        <button type="button" class="chip-btn preset-btn" data-amount="500000">+500k</button>
+                        <button type="button" class="chip-btn preset-btn" data-amount="1000000">+1M</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label for="modal-amount">Montant ($)</label>
+                    <input type="number" id="modal-amount" min="0" placeholder="0" class="field-input">
+                </div>
+
+                <div class="form-row">
+                    <label for="modal-reason">Motif (Optionnel)</label>
+                    <input type="text" id="modal-reason" placeholder="Ex: Ajustement, Remboursement..." class="field-input">
+                </div>
+
+                <div class="modal-btns">
+                    <button type="button" class="act-btn btn-primary" id="btn-act-give">Créditer (+)</button>
+                    <button type="button" class="act-btn btn-warning" id="btn-act-remove">Débiter (-)</button>
+                    <button type="button" class="act-btn btn-neutral" id="btn-act-set">Fixer (=)</button>
+                </div>
+
+                <div class="modal-danger">
+                    <button type="button" class="wipe-btn" id="btn-act-wipe">Remettre à zéro (Wipe)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOCIETY MODAL -->
+        <div id="society-modal" class="modal-layer" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-top">
+                    <div>
+                        <h4 id="modal-soc-name">Société</h4>
+                        <span id="modal-soc-id" class="modal-id">society_...</span>
+                    </div>
+                    <button class="modal-x" id="btn-close-soc-modal">&times;</button>
+                </div>
+
+                <div class="bal-single">
+                    <span class="bal-lbl">Solde en caisse</span>
+                    <span class="bal-num soc-color" id="m-soc-bal">0 $</span>
+                </div>
+
+                <div class="form-row">
+                    <label>Montants rapides</label>
+                    <div class="chip-row">
+                        <button type="button" class="chip-btn preset-soc-btn" data-amount="50000">+50k</button>
+                        <button type="button" class="chip-btn preset-soc-btn" data-amount="100000">+100k</button>
+                        <button type="button" class="chip-btn preset-soc-btn" data-amount="500000">+500k</button>
+                        <button type="button" class="chip-btn preset-soc-btn" data-amount="1000000">+1M</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label for="modal-soc-amount">Montant ($)</label>
+                    <input type="number" id="modal-soc-amount" min="0" placeholder="0" class="field-input">
+                </div>
+
+                <div class="form-row">
+                    <label for="modal-soc-reason">Motif (Optionnel)</label>
+                    <input type="text" id="modal-soc-reason" placeholder="Ex: Subvention..." class="field-input">
+                </div>
+
+                <div class="modal-btns">
+                    <button type="button" class="act-btn btn-primary" id="btn-soc-give">Créditer (+)</button>
+                    <button type="button" class="act-btn btn-warning" id="btn-soc-remove">Débiter (-)</button>
+                    <button type="button" class="act-btn btn-neutral" id="btn-soc-set">Fixer (=)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIRM DIALOG -->
+        <div id="confirm-modal" class="modal-layer" style="display: none; z-index: 9999;">
+            <div class="modal-box confirm-box">
+                <h4 id="confirm-title">Confirmation</h4>
+                <p id="confirm-desc">Confirmer cette opération ?</p>
+                <div class="confirm-btns">
+                    <button id="btn-confirm-cancel" class="btn btn-ghost">Annuler</button>
+                    <button id="btn-confirm-ok" class="btn btn-danger">Confirmer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-container" class="toasts"></div>
+    </div> <!-- .panel -->
+</div> <!-- #app -->
+
+    <script src="script.js"></script>
+</body>
+</html>
